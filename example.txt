@@ -1,0 +1,1 @@
+Hello my name is webVar{name}! I live in webVar{country}. This is an escaped string \webVar{name}! Invalid variables look like this: webVar{Jeff}
