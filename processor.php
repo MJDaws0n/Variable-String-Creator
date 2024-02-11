@@ -24,11 +24,12 @@ function processVariables($string, $variables, $variableDeclarer){
 
     $updatedString = stringToHex($string);
 
-    $updatedString = str_replace("$variableDeclarer 7b", "VARSTART", $updatedString);
+    $updatedString = str_replace("$variableDeclarer 7b", "+VARSTART", $updatedString);
     $updatedString = str_replace("7d", "VAREND", $updatedString);
     $updatedString = str_replace("5c 5c", '/', $updatedString);
     $updatedString = str_replace("5c", '\\', $updatedString);
-    $updatedString = str_replace("\ VARSTART", "\ $variableDeclarer 7b", $updatedString);
+    $updatedString = str_replace("\ +VARSTART", "$variableDeclarer 7b", $updatedString);
+
 
     $stringArray = explode(" ", $updatedString);
 
@@ -40,7 +41,7 @@ function processVariables($string, $variables, $variableDeclarer){
     $insideVar = false;
 
     foreach ($stringArray as $character){
-        if($character == 'VARSTART'){
+        if($character == '+VARSTART'){
             if($lastType != 'end'){
                 $character = "$variableDeclarer 7b";
             } else{
@@ -55,7 +56,7 @@ function processVariables($string, $variables, $variableDeclarer){
             }
         }
 
-        if ($character === "VARSTART") {
+        if ($character === "+VARSTART") {
             $insideVar = true;
         } else if ($character === "VAREND") {
             $insideVar = false;
@@ -67,19 +68,20 @@ function processVariables($string, $variables, $variableDeclarer){
     }
 
     // Fixed issues with some \ duplication
-    $updatedString = str_replace("/ VARSTART", '| VARSTART', $updatedString);
-
+    $updatedString = str_replace("/ +VARSTART", '| +VARSTART', $updatedString);
     while(strpos($updatedString, '/ |') !== false) {
         $updatedString = str_replace("/ |", '| |', $updatedString);
     }
 
-    $updatedString = str_replace("VARSTART", '', $updatedString);
+
+    $updatedString = str_replace("+VARSTART", '', $updatedString);
     $updatedString = str_replace("VAREND", '', $updatedString);
 
     $updatedString = str_replace("|", '5c', $updatedString);
 
-    $updatedString = str_replace("/", '5c 5c', $updatedString);
-    $updatedString = str_replace("\\", '5c', $updatedString);
+    $updatedString = str_replace("/", '5c', $updatedString);
+    $updatedString = str_replace("\\", '', $updatedString);
+    
 
     foreach ($variables as $varName => $varValue){
         $updatedString = str_replace(implode(' ', str_split($varName)), stringToHex($varValue), $updatedString);
@@ -110,15 +112,3 @@ function processVariables($string, $variables, $variableDeclarer){
 
     return $updatedString;
 }
-
-
-// Example usage
-
-// Set the variable starter here. E.g the webVar to detect webVar{variable_name}
-$variableDeclarer = 'webVar';
-
-// This can just be a normal string, however things may have to be double escaped due to PHP's nature
-$string = file_get_contents(dirname(__FILE__).'/example.txt');
-
-echo "String:<br> $string<br><br>Processed:<br>";
-echo processVariables($string, ['name' => 'Jeff', 'country' => 'United Kingdom'], $variableDeclarer);
