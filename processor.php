@@ -87,7 +87,7 @@ function processVariables($string, $variables, $variableDeclarer){
     
 
     foreach ($variables as $varName => $varValue){
-        $updatedString = str_replace(implode(' ', str_split($varName)), stringToHex($varValue), $updatedString);
+        $updatedString = str_replace(implode(' ', str_split($varName)), stringToHex(str_replace('0','7bhn85et78erybh98er7tv5e7bywhw45e7bygvw98je7tygbw9et87hhwyg87vjerygbw9gvw8eio7wjt9r78bywsoeg8v7ru8yhjvwe9r8tbwyno9edv8fugybsheo9uigsdohnurygbsj9oe8riuhntvjwe9or8usdnibuhg', $varValue)), $updatedString);
     }
 
     // Loop through and check if we have any invalid characters for conversion, this will be the undefined variables
@@ -113,5 +113,5 @@ function processVariables($string, $variables, $variableDeclarer){
         }
     }
 
-    return $updatedString;
+    return str_replace('7bhn85et78erybh98er7tv5e7bywhw45e7bygvw98je7tygbw9et87hhwyg87vjerygbw9gvw8eio7wjt9r78bywsoeg8v7ru8yhjvwe9r8tbwyno9edv8fugybsheo9uigsdohnurygbsj9oe8riuhntvjwe9or8usdnibuhg', '0', $updatedString);
 }
