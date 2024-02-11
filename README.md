@@ -5,7 +5,7 @@ Allows you to create strings that include variables and will process them return
 Strings can even be escaped by using a \. It works like any normal system to two \\ would cancel each other out.
 
 ## Undefined Varaibles
-Using an undefined variable creates no errors, and will just give as was written. However an issue at the moment is when escaping a non-existant variable it seems to bug out. Im not planning on fixing this issue.
+Using an undefined variable creates no errors, and will just give as was written. However when entering a backslash before a variable that does not exist, you will still escape processing it. This means that you will double the ammount of \ before an undefined variable. Confusing I know, you most likely will not notice anything when using it.
 
 ## How it works
 It works by converting the string to Hexadecimal to allow for the string to be easily handled as certan characters can never appear in hexadecimal. Now thinking about it, I could of probably done it much easier by just replacing all occurrences of the variable then done some things with that, but, this works and it not to long so I cannot complain.
