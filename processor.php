@@ -118,7 +118,7 @@ function processVariables($string, $variables, $variableDeclarer){
 $variableDeclarer = 'webVar';
 
 // This can just be a normal string, however things may have to be double escaped due to PHP's nature
-$string = file_get_contents(dirname(__FILE__).'/test.txt');
+$string = file_get_contents(dirname(__FILE__).'/example.txt');
 
 echo "String:<br> $string<br><br>Processed:<br>";
 echo processVariables($string, ['name' => 'Jeff', 'country' => 'United Kingdom'], $variableDeclarer);
