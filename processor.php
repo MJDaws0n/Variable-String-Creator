@@ -79,8 +79,11 @@ function processVariables($string, $variables, $variableDeclarer){
 
     $updatedString = str_replace("|", '5c', $updatedString);
 
-    $updatedString = str_replace("/", '5c', $updatedString);
-    $updatedString = str_replace("\\", '', $updatedString);
+    $updatedString = str_replace("/ +VARSTART", '5c', $updatedString);
+    $updatedString = str_replace("\\ +VARSTART", '', $updatedString);
+
+    $updatedString = str_replace("/", '5c 5c', $updatedString);
+    $updatedString = str_replace("\\", '5c', $updatedString);
     
 
     foreach ($variables as $varName => $varValue){
