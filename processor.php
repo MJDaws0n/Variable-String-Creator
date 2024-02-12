@@ -111,8 +111,12 @@ function processVariables($string, $variables, $variableDeclarer){
                 $updatedString .= '0';
             } else{
                 if(!$currentlyInvalid){
-                    $currentlyInvalid = true;
-                    $updatedString .= hexToString($variableDeclarer).'{'.trim($character);
+                    if($character != '30'){
+                        $currentlyInvalid = true;
+                        $updatedString .= hexToString($variableDeclarer).'{'.trim($character);
+                    } else{
+                        $updatedString .= '0';
+                    }
                 } else{
                     $updatedString .= trim($character);
                 }
