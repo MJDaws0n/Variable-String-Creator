@@ -8,6 +8,9 @@ function stringToHex($string) {
 
 // Function to convert hex back to the original string
 function hexToString($hex) {
+    if($hex == '@'){
+        return '0';
+    }
     $hex = str_replace(' ', '', $hex);
     $string = @hex2bin($hex);
     return $string;
@@ -87,7 +90,7 @@ function processVariables($string, $variables, $variableDeclarer){
     
 
     foreach ($variables as $varName => $varValue){
-        $updatedString = str_replace(implode(' ', str_split($varName)), stringToHex(str_replace('0','7bhn85et78erybh98er7tv5e7bywhw45e7bygvw98je7tygbw9et87hhwyg87vjerygbw9gvw8eio7wjt9r78bywsoeg8v7ru8yhjvwe9r8tbwyno9edv8fugybsheo9uigsdohnurygbsj9oe8riuhntvjwe9or8usdnibuhg', $varValue)), $updatedString);
+        $updatedString = str_replace(implode(' ', str_split($varName)), str_replace('30', '@', stringToHex($varValue)), $updatedString);
     }
 
     // Loop through and check if we have any invalid characters for conversion, this will be the undefined variables
@@ -104,14 +107,18 @@ function processVariables($string, $variables, $variableDeclarer){
             }
             $updatedString .= hexToString($character);
         } else{
-            if(!$currentlyInvalid){
-                $currentlyInvalid = true;
-                $updatedString .= hexToString($variableDeclarer).'{'.trim($character);
+            if($character == '@'){
+                $updatedString .= '0';
             } else{
-                $updatedString .= trim($character);
+                if(!$currentlyInvalid){
+                    $currentlyInvalid = true;
+                    $updatedString .= hexToString($variableDeclarer).'{'.trim($character);
+                } else{
+                    $updatedString .= trim($character);
+                }
             }
         }
     }
 
-    return str_replace('7bhn85et78erybh98er7tv5e7bywhw45e7bygvw98je7tygbw9et87hhwyg87vjerygbw9gvw8eio7wjt9r78bywsoeg8v7ru8yhjvwe9r8tbwyno9edv8fugybsheo9uigsdohnurygbsj9oe8riuhntvjwe9or8usdnibuhg', '0', $updatedString);
+    return $updatedString;
 }
