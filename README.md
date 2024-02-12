@@ -1,6 +1,9 @@
 # Variable-String-Creator
 Allows you to create strings that include variables and will process them returning the new string with the variable values in place of the variables.
 
+## Variable Names
+Variable names can only contain a-z A-Z 0-9 _ and -. Other characters may work, but may cause issues so it's not recomended.
+
 ## Escaping
 Strings can even be escaped by using a \. It works like any normal system to two \\ would cancel each other out.
 
