@@ -5,7 +5,7 @@ Allows you to create strings that include variables and will process them return
 Variable names can only contain a-z A-Z 0-9 _ and -. Other characters may work, but may cause issues so it's not recomended.
 
 ## Escaping
-Strings can even be escaped by using a \. It works like any normal system to two \\ would cancel each other out.
+Strings can even be escaped by using a \\. It works like any normal system so two \\\\ would cancel each other out.
 
 ## Undefined Varaibles
 Using an undefined variable creates no errors, and will just give as was written. However when entering a backslash before a variable that does not exist, you will still escape processing it. This means that you will double the ammount of \ before an undefined variable. Confusing I know, you most likely will not notice anything when using it.
