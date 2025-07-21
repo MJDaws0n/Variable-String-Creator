@@ -1,128 +1,167 @@
 <?php
-// Function to convert a string to hex with padding
-function stringToHex($string) {
-    $hex = bin2hex($string);
-    $paddedHex = implode(' ', str_split($hex, 2));
-    return $paddedHex;
-}
 
-// Function to convert hex back to the original string
-function hexToString($hex) {
-    if($hex == '@'){
-        return '0';
-    }
-    $hex = str_replace(' ', '', $hex);
-    $string = @hex2bin($hex);
-    return $string;
-}
-
-function processVariables($string, $variables, $variableDeclarer){
-    $variableDeclarer = stringToHex($variableDeclarer);
-    
-    // This is for ignoring invalid variables
-    $varNames = [];
-    foreach ($variables as $varName => $varValue){
-        array_push($varNames, $varName);
+/**
+ * Class StringVariableProcessor
+ * 
+ * Provides utilities for converting strings to hex and back,
+ * and for processing variables within a string using hex encoding.
+ */
+class StringVariableProcessor
+{
+    /**
+     * Converts a string to its hex representation, padded with spaces.
+     *
+     * @param string $string The input string.
+     * @return string The hex representation of the string, space-separated.
+     */
+    public static function stringToHex(string $string): string
+    {
+        return implode(' ', str_split(bin2hex($string), 2));
     }
 
-    $updatedString = stringToHex($string);
-
-    $updatedString = str_replace("$variableDeclarer 7b", "+VARSTART", $updatedString);
-    $updatedString = str_replace("7d", "VAREND", $updatedString);
-    $updatedString = str_replace("5c 5c", '/', $updatedString);
-    $updatedString = str_replace("5c", '\\', $updatedString);
-    $updatedString = str_replace("\ +VARSTART", "$variableDeclarer 7b", $updatedString);
-
-
-    $stringArray = explode(" ", $updatedString);
-
-    $updatedString = '';
-
-    $lastType = 'end';
-    $index = 0;
-
-    $insideVar = false;
-
-    foreach ($stringArray as $character){
-        if($character == '+VARSTART'){
-            if($lastType != 'end'){
-                $character = "$variableDeclarer 7b";
-            } else{
-                $lastType = 'start';
-            }
+    /**
+     * Converts a space-separated hex string back to the original string.
+     *
+     * @param string $hex The hex string to convert.
+     * @return string The original decoded string.
+     */
+    public static function hexToString(string $hex): string
+    {
+        if ($hex === '@') {
+            return '0';
         }
-        if($character == 'VAREND'){
-            if($lastType != 'start'){
-                $character = '7d';
-            } else{
-                $lastType = 'end';
+        return @hex2bin(str_replace(' ', '', $hex)) ?: '';
+    }
+
+    /**
+     * Processes a string, replacing declared variables with their corresponding values.
+     *
+     * @param string $string The original string containing variables.
+     * @param array $variables An associative array of variable names to values.
+     * @param string $variableDeclarer A character or string used to declare a variable.
+     * @return string The processed string with variables replaced.
+     */
+    public static function processVariables(string $string, array $variables, string $variableDeclarer): string
+    {
+        $variableDeclarerHex = self::stringToHex($variableDeclarer);
+        $updatedString = self::stringToHex($string);
+
+        $replacements = [
+            "$variableDeclarerHex 7b" => '+VARSTART',
+            '7d' => 'VAREND',
+            '5c 5c' => '/',
+            '5c' => '\\',
+            "\ +VARSTART" => "$variableDeclarerHex 7b"
+        ];
+
+        $updatedString = strtr($updatedString, $replacements);
+        $stringArray = explode(' ', $updatedString);
+
+        $updatedString = '';
+        $insideVar = false;
+        $lastType = 'end';
+
+        foreach ($stringArray as $char) {
+            if ($char === '+VARSTART') {
+                if ($lastType !== 'end') {
+                    $char = "$variableDeclarerHex 7b";
+                } else {
+                    $lastType = 'start';
+                    $insideVar = true;
+                    continue;
+                }
             }
+            if ($char === 'VAREND') {
+                if ($lastType !== 'start') {
+                    $char = '7d';
+                } else {
+                    $lastType = 'end';
+                    $insideVar = false;
+                    continue;
+                }
+            }
+
+            if ($insideVar) {
+                $char = self::hexToString($char);
+            }
+
+            $updatedString .= $char . ' ';
         }
 
-        if ($character === "+VARSTART") {
-            $insideVar = true;
-        } else if ($character === "VAREND") {
-            $insideVar = false;
-        } else if ($insideVar) {
-            $character = hexToString($character);
+        $updatedString = self::cleanUpString($updatedString, $variableDeclarerHex);
+
+        foreach ($variables as $varName => $varValue) {
+            $updatedString = str_replace(
+                implode(' ', str_split($varName)),
+                str_replace('30', '@', self::stringToHex($varValue)),
+                $updatedString
+            );
         }
 
-        $updatedString .= $character.' ';
+        return self::replaceInvalidChars($updatedString, $variableDeclarerHex);
     }
 
-    // Fixed issues with some \ duplication
-    $updatedString = str_replace("/ +VARSTART", '| +VARSTART', $updatedString);
-    while(strpos($updatedString, '/ |') !== false) {
-        $updatedString = str_replace("/ |", '| |', $updatedString);
+    /**
+     * Cleans up escaped sequences in the string.
+     *
+     * @param string $string The input string.
+     * @param string $variableDeclarerHex The hex value of the variable declarer.
+     * @return string Cleaned up string.
+     */
+    private static function cleanUpString(string $string, string $variableDeclarerHex): string
+    {
+        $string = str_replace('/ +VARSTART', '| +VARSTART', $string);
+
+        while (strpos($string, '/ |') !== false) {
+            $string = str_replace('/ |', '| |', $string);
+        }
+
+        $cleanup = [
+            '+VARSTART' => '',
+            'VAREND' => '',
+            '|' => '5c',
+            '/ +VARSTART' => '5c',
+            '\\ +VARSTART' => '',
+            '/' => '5c 5c',
+            '\\' => '5c'
+        ];
+
+        return strtr($string, $cleanup);
     }
 
+    /**
+     * Replaces invalid hex characters and undefined variables in the string.
+     *
+     * @param string $string The input string.
+     * @param string $variableDeclarerHex The hex representation of the variable declarer.
+     * @return string The final processed string.
+     */
+    private static function replaceInvalidChars(string $string, string $variableDeclarerHex): string
+    {
+        $stringArray = explode(' ', $string);
+        $result = '';
+        $currentlyInvalid = false;
 
-    $updatedString = str_replace("+VARSTART", '', $updatedString);
-    $updatedString = str_replace("VAREND", '', $updatedString);
-
-    $updatedString = str_replace("|", '5c', $updatedString);
-
-    $updatedString = str_replace("/ +VARSTART", '5c', $updatedString);
-    $updatedString = str_replace("\\ +VARSTART", '', $updatedString);
-
-    $updatedString = str_replace("/", '5c 5c', $updatedString);
-    $updatedString = str_replace("\\", '5c', $updatedString);
-    
-
-    foreach ($variables as $varName => $varValue){
-        $updatedString = str_replace(implode(' ', str_split($varName)), str_replace('30', '@', stringToHex($varValue)), $updatedString);
-    }
-
-    // Loop through and check if we have any invalid characters for conversion, this will be the undefined variables
-    $stringArray = explode(" ", $updatedString);
-    $updatedString = '';
-    
-    $currentlyInvalid = false;
-
-    foreach ($stringArray as $character){
-        if(hexToString($character) || $character == ''){
-            if($currentlyInvalid){
-                $currentlyInvalid = false;
-                $updatedString .= '}';
-            }
-            $updatedString .= hexToString($character);
-        } else{
-            if($character == '@'){
-                $updatedString .= '0';
-            } else{
-                if(!$currentlyInvalid){
-                    if($character != '30'){
-                        $currentlyInvalid = true;
-                        $updatedString .= hexToString($variableDeclarer).'{'.trim($character);
-                    } else{
-                        $updatedString .= '0';
-                    }
-                } else{
-                    $updatedString .= trim($character);
+        foreach ($stringArray as $char) {
+            $decoded = self::hexToString($char);
+            if ($decoded || $char === '') {
+                if ($currentlyInvalid) {
+                    $currentlyInvalid = false;
+                    $result .= '}';
+                }
+                $result .= $decoded;
+            } else {
+                if ($char === '@') {
+                    $result .= '0';
+                } elseif (!$currentlyInvalid && $char !== '30') {
+                    $currentlyInvalid = true;
+                    $result .= self::hexToString($variableDeclarerHex) . '{' . trim($char);
+                } elseif ($currentlyInvalid) {
+                    $result .= trim($char);
                 }
             }
         }
-    }
 
-    return $updatedString;
+        return $result;
+    }
 }
