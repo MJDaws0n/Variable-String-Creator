@@ -14,25 +14,18 @@ Using an undefined variable creates no errors, and will just give as was written
 It works by converting the string to Hexadecimal to allow for the string to be easily handled as certan characters can never appear in hexadecimal. Now thinking about it, I could of probably done it much easier by just replacing all occurrences of the variable then done some things with that, but, this works and it not to long so I cannot complain.
 
 ## Usage
-Simply Include or Require this file, then run this:
-```javascript
-processVariables($string, $variableArray, $variableDeclarer);
+Simply Include or Require this file, and use it, then run this:
+```php
+$processed = StringVariableProcessor::processVariables($string, $variables, $variableDeclarer);
 ```
 Obviously replace these values with the correct values. This is an example on how it could look:
-```javascript
-// This is the part that goes before the {}
-$variableDeclarer = 'var';
+```php
+$string = 'Hello {{name}}!';
+$variables = ['name' => 'Max'];
+$variableDeclarer = '{{';
 
-// This is what is the processed string
-$string = 'My name is var{name} and live in var{country}';
-
-// This is the variables. The first part is the name of the variable - what you put in the {} and the second part is the values, you can ofcource run your own code to set these to whatever you want
-$variableArray = [
-'name' => 'Alex',
-'country' => 'United Kingdom'
-];
-$result = processVariables($string, $variableArray, $variableDeclarer);
-echo $result;
+$processed = StringVariableProcessor::processVariables($string, $variables, $variableDeclarer);
+echo $processed;
 ```
 
 ## Practical use
